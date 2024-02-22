@@ -3,8 +3,10 @@
 
 import type { EndpointOption } from './types.js';
 
+import { nodesIntegriteeSVG } from '@polkadot/apps-config/ui/logos/nodes';
+
 import { PASEO_GENESIS } from '../api/constants.js';
-import { } from '../ui/logos/chains/index.js';
+import { chainsPaseoBgPNG, chainsPaseoPNG } from '../ui/logos/chains/index.js';
 // import { testnetParachainSVG } from '../ui/logos/nodes/index.js';
 import { getTeleports } from './util.js';
 
@@ -29,6 +31,19 @@ export const testParasPaseo: Omit<EndpointOption, 'teleport'>[] = [
   //     logo: testnetParachainSVG
   //   }
   // }
+  {
+    homepage: 'https://integritee.network',
+    info: 'integritee',
+    paraId: 2039,
+    providers: {
+      Integritee: 'wss://paseo.api.integritee.network'
+    },
+    text: 'Integritee Network (Paseo)',
+    ui: {
+      color: '#658ea9',
+      logo: nodesIntegriteeSVG
+    }
+  }
 ];
 
 export const testParasPaseoCommon: EndpointOption[] = [
@@ -58,13 +73,15 @@ export const testRelayPaseo: EndpointOption = {
   ],
   providers: {
     Amforc: 'wss://paseo.rpc.amforc.com',
+    'IBP-GeoDNS1': 'wss://rpc.ibp.network/paseo',
     'IBP-GeoDNS2': 'wss://rpc.dotters.network/paseo'
     // 'light client': 'light://substrate-connect/paseo'
   },
   teleport: getTeleports(testParasPaseoCommon),
   text: 'Paseo',
   ui: {
-    color: '#e6007a',
-    identityIcon: 'polkadot'
+    color: `url(${chainsPaseoBgPNG}) #A0FED4`,
+    identityIcon: 'polkadot',
+    logo: chainsPaseoPNG
   }
 };
