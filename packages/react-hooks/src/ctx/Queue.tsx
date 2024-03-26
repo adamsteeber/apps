@@ -4,7 +4,8 @@
 import type { SubmittableResult } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/promise/types';
 import type { ActionStatus, ActionStatusPartial, PartialQueueTxExtrinsic, PartialQueueTxRpc, QueueProps, QueueStatus, QueueTx, QueueTxExtrinsic, QueueTxRpc, QueueTxStatus, SignerCallback } from '@polkadot/react-components/Status/types';
-import type { DispatchError, EventRecord } from '@polkadot/types/interfaces';
+import type { Bytes } from '@polkadot/types';
+import type { DispatchError } from '@polkadot/types/interfaces';
 import type { ITuple, Registry, SignerPayloadJSON } from '@polkadot/types/types';
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -124,7 +125,7 @@ function extractEvents (result?: SubmittableResult): ActionStatus[] {
               const abi = getContractAbi(accountId.toString());
 
               if (abi) {
-                const decoded = abi.decodeEvent(encoded as EventRecord);
+                const decoded = abi.decodeEvent(encoded as Bytes);
 
                 return {
                   action: decoded.event.identifier,

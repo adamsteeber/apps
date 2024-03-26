@@ -34,12 +34,11 @@ function filter (records: EventRecord[]): Changes<Hash> {
 
 function usePreimagesImpl (): HexString[] | undefined {
   const { api } = useApi();
-  const startValueStatusFor = useMapKeys(api.query.preimage.statusFor, EMPTY_PARAMS, OPT_HASH);
-  const startvalueRequstStatusFor = useMapKeys(api.query.preimage.requestStatusFor, EMPTY_PARAMS, OPT_HASH);
+  const startValue = useMapKeys(api.query.preimage.statusFor, EMPTY_PARAMS, OPT_HASH);
   const hashes = useEventChanges([
     api.events.preimage.Cleared,
     api.events.preimage.Noted
-  ], filter, startValueStatusFor?.concat(startvalueRequstStatusFor || []));
+  ], filter, startValue);
 
   return useMemo(
     () => hashes?.map((h) => h.toHex()),

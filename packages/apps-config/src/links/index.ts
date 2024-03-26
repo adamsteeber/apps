@@ -9,6 +9,7 @@ import { Dotreasury } from './dotreasury.js';
 import { Edgscan } from './edgscan.js';
 import { KodaDot } from './kodadot.js';
 import { MoonbeamApps } from './moonbeamApps.js';
+import { Polkaholic } from './polkaholic.js';
 import { Polkascan } from './polkascan.js';
 import { PolkassemblyIo, PolkassemblyNetwork } from './polkassembly.js';
 import { Singular } from './singular.js';
@@ -24,6 +25,7 @@ export const externalLinks: Record<string, ExternalDef> = {
   Edgscan,
   KodaDot,
   MoonbeamApps,
+  Polkaholic,
   Polkascan,
   PolkassemblyIo,
   PolkassemblyNetwork,

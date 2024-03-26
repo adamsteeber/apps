@@ -5,19 +5,18 @@ import type { Option } from '@polkadot/types';
 import type { PalletUniquesItemMetadata } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 import type { AccountItem } from '../types.js';
-import type { ItemInfo, ItemSupportedMetadata } from './types.js';
+import type { ItemInfo, ItemSupportedIpfsData } from './types.js';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { createNamedHook, useApi, useCall, useMetadataFetch } from '@polkadot/react-hooks';
-import { normalizeMetadataLink } from '@polkadot/react-hooks/useMetadataFetch';
+import { createNamedHook, useApi, useCall, useIpfsFetch } from '@polkadot/react-hooks';
 
-type FetchedMetadata = Map<string, ItemSupportedMetadata | null>;
+type IpfsData = Map<string, ItemSupportedIpfsData | null>;
 
 const QUERY_OPTS = { withParams: true };
 
-const METADATA_FETCH_OPTIONS = {
-  transform: (data: string | undefined): ItemSupportedMetadata | null => {
+const IPFS_FETCH_OPTIONS = {
+  transform: (data: string | undefined): ItemSupportedIpfsData | null => {
     if (!data) {
       return null;
     }
@@ -27,7 +26,7 @@ const METADATA_FETCH_OPTIONS = {
 
       if (result && typeof result === 'object') {
         return {
-          image: typeof result.image === 'string' ? normalizeMetadataLink(result.image) : null,
+          image: typeof result.image === 'string' ? result.image.replace(/ipfs:\/\/|ipfs\//gi, '') : null,
           name: typeof result.name === 'string' ? result.name : null
         };
       }
@@ -53,12 +52,12 @@ function extractInfo ([, itemId]: [BN, BN], metadata: Option<PalletUniquesItemMe
   };
 }
 
-const addFetchedMetadata = (fetchedMetadata: FetchedMetadata) => (itemInfo: ItemInfo): ItemInfo => {
-  const metadataLink = normalizeMetadataLink(itemInfo.metadata?.data.toPrimitive() as string);
+const addIpfsData = (ipfsData: IpfsData) => (itemInfo: ItemInfo): ItemInfo => {
+  const ipfsHash = itemInfo.metadata?.data.toString();
 
   return {
     ...itemInfo,
-    ipfsData: (metadataLink && fetchedMetadata.has(metadataLink) && fetchedMetadata.get(metadataLink)) || null
+    ipfsData: (ipfsHash && ipfsData.has(ipfsHash) && ipfsData.get(ipfsHash)) || null
   };
 };
 
@@ -73,7 +72,7 @@ function useItemsInfosImpl (accountItems: AccountItem[]): ItemInfo[] | undefined
 
   const metadata = useCall<[[[BN, BN][]], Option<PalletUniquesItemMetadata>[]]>(api.query.uniques.instanceMetadataOf.multi, [ids], QUERY_OPTS);
 
-  const metadataLinks = useMemo((): string[] | undefined => {
+  const ipfsHashes = useMemo((): string[] | undefined => {
     if (metadata?.[1].length) {
       return metadata[1].map((o) =>
         o.isSome
@@ -85,10 +84,10 @@ function useItemsInfosImpl (accountItems: AccountItem[]): ItemInfo[] | undefined
     return undefined;
   }, [metadata]);
 
-  const fetchedMetadata = useMetadataFetch<ItemSupportedMetadata | null>(metadataLinks, METADATA_FETCH_OPTIONS);
+  const ipfsData = useIpfsFetch<ItemSupportedIpfsData | null>(ipfsHashes, IPFS_FETCH_OPTIONS);
 
   useEffect((): void => {
-    if (fetchedMetadata && accountItems.length && metadata?.[0][0].length) {
+    if (ipfsData && accountItems.length && metadata?.[0][0].length) {
       const [collectionId] = metadata[0][0][0];
 
       if (!collectionId.eq(ids[0][0])) {
@@ -97,9 +96,9 @@ function useItemsInfosImpl (accountItems: AccountItem[]): ItemInfo[] | undefined
 
       const itemsInfos = metadata[0][0].map((id, index) => extractInfo(id, metadata[1][index], accountItems));
 
-      setState(itemsInfos.map(addFetchedMetadata(fetchedMetadata)));
+      setState(itemsInfos.map(addIpfsData(ipfsData)));
     }
-  }, [accountItems, ids, fetchedMetadata, metadata]);
+  }, [accountItems, ids, ipfsData, metadata]);
 
   return state;
 }

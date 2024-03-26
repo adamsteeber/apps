@@ -39,7 +39,7 @@ interface State {
   values?: RawParams;
 }
 
-export { createValue, Holder, ParamComp };
+export { Holder };
 
 class Params extends React.PureComponent<Props, State> {
   public override state: State = {

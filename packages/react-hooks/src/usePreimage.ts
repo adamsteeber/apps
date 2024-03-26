@@ -159,9 +159,9 @@ function convertDeposit (deposit?: [AccountId, u128] | null): PreimageDeposit | 
 }
 
 /** @internal Returns the parameters required for a call to bytes */
-function getBytesParams (interimResult: PreimageStatus, someOptStatus: Option<PalletPreimageRequestStatus>): BytesParams {
+function getBytesParams (interimResult: PreimageStatus, optStatus: Option<PalletPreimageRequestStatus>): BytesParams {
   const result = objectSpread<PreimageStatus>({}, interimResult, {
-    status: someOptStatus.unwrapOr(null)
+    status: optStatus.unwrapOr(null)
   });
 
   if (result.status) {
@@ -218,18 +218,14 @@ function usePreimageImpl (hashOrBounded?: Hash | HexString | FrameSupportPreimag
     [api, hashOrBounded]
   );
 
-  // api.query.preimage.statusFor has been deprecated in favor of api.query.preimage.requestStatusFor.
-  // To ensure we get all preimages correctly we query both storages. see: https://github.com/polkadot-js/apps/pull/10310
   const optStatus = useCall<Option<PalletPreimageRequestStatus>>(!inlineData && paramsStatus && api.query.preimage?.statusFor, paramsStatus);
-  const optRequstStatus = useCall<Option<PalletPreimageRequestStatus>>(!inlineData && paramsStatus && api.query.preimage?.requestStatusFor, paramsStatus);
-  const someOptStatus = optStatus?.isSome ? optStatus : optRequstStatus;
 
   // from the retrieved status (if any), get the on-chain stored bytes
   const { paramsBytes, resultPreimageFor } = useMemo(
-    () => resultPreimageHash && someOptStatus
-      ? getBytesParams(resultPreimageHash, someOptStatus)
+    () => resultPreimageHash && optStatus
+      ? getBytesParams(resultPreimageHash, optStatus)
       : {},
-    [someOptStatus, resultPreimageHash]
+    [optStatus, resultPreimageHash]
   );
 
   const optBytes = useCall<Option<Bytes>>(paramsBytes && api.query.preimage?.preimageFor, paramsBytes);

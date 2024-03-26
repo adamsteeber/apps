@@ -35,6 +35,5 @@ export const ethereumChains = [
   'innovatorchain',
   'masverse',
   'laos',
-  'klaos',
   'muse'
 ];

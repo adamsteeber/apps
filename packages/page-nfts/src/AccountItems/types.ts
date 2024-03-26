@@ -5,7 +5,7 @@ import type { AccountId } from '@polkadot/types/interfaces';
 import type { PalletUniquesItemMetadata } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 
-export interface ItemSupportedMetadata {
+export interface ItemSupportedIpfsData {
   name: string | null;
   image: string | null;
 }
@@ -15,5 +15,5 @@ export interface ItemInfo {
   id: BN;
   key: string;
   metadata: PalletUniquesItemMetadata | null;
-  ipfsData: ItemSupportedMetadata | null;
+  ipfsData: ItemSupportedIpfsData | null;
 }

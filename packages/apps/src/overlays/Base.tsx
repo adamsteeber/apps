@@ -60,8 +60,8 @@ const StyledDiv = styled.div`
   z-index: 500;
 
   &.isBottom {
-    position: static;
-    z-index: 0;
+    bottom: 0.75rem;
+    top: auto;
   }
 
   &.isFull {

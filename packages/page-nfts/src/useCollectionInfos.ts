@@ -5,14 +5,13 @@ import type { Option } from '@polkadot/types';
 import type { AccountId } from '@polkadot/types/interfaces';
 import type { PalletUniquesCollectionDetails, PalletUniquesCollectionMetadata } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
-import type { CollectionInfo, CollectionSupportedMetadata } from './types.js';
+import type { CollectionInfo, CollectionSupportedIpfsData } from './types.js';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { createNamedHook, useAccounts, useApi, useCall, useMetadataFetch } from '@polkadot/react-hooks';
-import { normalizeMetadataLink } from '@polkadot/react-hooks/useMetadataFetch';
+import { createNamedHook, useAccounts, useApi, useCall, useIpfsFetch } from '@polkadot/react-hooks';
 
-type FetchedMetadata = Map<string, CollectionSupportedMetadata | null>;
+type IpfsData = Map<string, CollectionSupportedIpfsData | null>;
 
 const EMPTY_FLAGS = {
   isAdminMe: false,
@@ -23,8 +22,8 @@ const EMPTY_FLAGS = {
 
 const QUERY_OPTS = { withParams: true };
 
-const METADATA_FETCH_OPTIONS = {
-  transform: (data: string | undefined): CollectionSupportedMetadata | null => {
+const IPFS_FETCH_OPTIONS = {
+  transform: (data: string | undefined): CollectionSupportedIpfsData | null => {
     if (!data) {
       return null;
     }
@@ -34,7 +33,7 @@ const METADATA_FETCH_OPTIONS = {
 
       if (result && typeof result === 'object') {
         return {
-          image: typeof result.image === 'string' ? normalizeMetadataLink(result.image) : null,
+          image: typeof result.image === 'string' ? result.image.replace(/ipfs:\/\/|ipfs\//gi, '') : null,
           name: typeof result.name === 'string' ? result.name : null
         };
       }
@@ -71,12 +70,12 @@ function extractInfo (allAccounts: string[], id: BN, optDetails: Option<PalletUn
   };
 }
 
-const addFetchedMetadata = (fetchedMetadata: FetchedMetadata) => (collectionInfo: CollectionInfo): CollectionInfo => {
-  const metadataLink = normalizeMetadataLink(collectionInfo.metadata?.data.toPrimitive() as string);
+const addIpfsData = (ipfsData: IpfsData) => (collectionInfo: CollectionInfo): CollectionInfo => {
+  const ipfsHash = collectionInfo.metadata && collectionInfo.metadata.data?.toPrimitive() as string;
 
   return {
     ...collectionInfo,
-    ipfsData: (metadataLink && fetchedMetadata.has(metadataLink) && fetchedMetadata.get(metadataLink)) || null
+    ipfsData: (ipfsHash && ipfsData.has(ipfsHash) && ipfsData.get(ipfsHash)) || null
   };
 };
 
@@ -87,7 +86,7 @@ function useCollectionInfosImpl (ids?: BN[]): CollectionInfo[] | undefined {
   const details = useCall<[[BN[]], Option<PalletUniquesCollectionDetails>[]]>(api.query.uniques.class.multi, [ids], QUERY_OPTS);
   const [state, setState] = useState<CollectionInfo[] | undefined>();
 
-  const metadataLinks = useMemo(
+  const ipfsHashes = useMemo(
     () => metadata?.[1].length
       ? metadata[1].map((o) =>
         o.isSome
@@ -98,17 +97,17 @@ function useCollectionInfosImpl (ids?: BN[]): CollectionInfo[] | undefined {
     [metadata]
   );
 
-  const fetchedMetadata = useMetadataFetch<CollectionSupportedMetadata | null>(metadataLinks, METADATA_FETCH_OPTIONS);
+  const ipfsData = useIpfsFetch<CollectionSupportedIpfsData | null>(ipfsHashes, IPFS_FETCH_OPTIONS);
 
   useEffect((): void => {
-    if (fetchedMetadata && details && metadata && (details[0][0].length === metadata[0][0].length)) {
+    if (ipfsData && details && metadata && (details[0][0].length === metadata[0][0].length)) {
       const collectionInfos = details[0][0].map((id, index) =>
         extractInfo(allAccounts, id, details[1][index], metadata[1][index])
       );
 
-      setState(collectionInfos.map(addFetchedMetadata(fetchedMetadata)));
+      setState(collectionInfos.map(addIpfsData(ipfsData)));
     }
-  }, [allAccounts, details, ids, fetchedMetadata, metadata]);
+  }, [allAccounts, details, ids, ipfsData, metadata]);
 
   return state;
 }
